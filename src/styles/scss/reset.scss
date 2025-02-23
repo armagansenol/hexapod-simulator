@@ -1,0 +1,26 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Remove text-decoration and list styles */
+a {
+  text-decoration: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+/* Reset form elements */
+button,
+input,
+select,
+textarea {
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}

@@ -1,0 +1,27 @@
+{
+  "name": "hexa",
+  "version": "1.0.0",
+  "main": "./src/js/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite --host",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "meshline": "^3.3.1",
+    "postprocessing": "^6.36.7",
+    "three": "^0.172.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/three": "^0.173.0",
+    "eslint": "^9.21.0",
+    "globals": "^16.0.0",
+    "typescript-eslint": "^8.24.1",
+    "vite": "^6.0.11"
+  }
+}

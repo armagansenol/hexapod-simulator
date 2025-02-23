@@ -1,0 +1,27 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite build output
+dist/
+
+*.tsbuildinfo
+
+.sass-cache/
+*.css.map
+*.scssc
+*.sassc
+
+*.log
+*.lock
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+.env
+.env.local
+.env.*.local

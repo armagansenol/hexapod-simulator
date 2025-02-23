@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>"
+    />
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Hexapod Simulator</title>
+  </head>
+
+  <body>
+    <!-- <canvas id="threejs"></canvas> -->
+    <main class="control-panel">
+      <div id="tab-group" class="control-group-container">
+        <article class="control-group" data-index="0">
+          <section class="control">
+            <label>X</label>
+            <div class="input-group">
+              <input
+                data-category="body"
+                data-parameter="x"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Y</label>
+            <div class="input-group">
+              <input
+                data-category="body"
+                data-parameter="y"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Z</label>
+            <div class="input-group">
+              <input
+                data-category="body"
+                data-parameter="z"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Roll</label>
+            <div class="input-group">
+              <input
+                data-category="body"
+                data-parameter="roll"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Pitch</label>
+            <div class="input-group">
+              <input
+                data-category="body"
+                data-parameter="pitch"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Yaw</label>
+            <div class="input-group">
+              <input
+                data-category="body"
+                data-parameter="yaw"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+        </article>
+        <article class="control-group" data-index="1">
+          <section class="button-grid">
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_leg-5.svg"
+              data-category="endpoints"
+              data-legs="[5]"
+            />
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_leg-4.svg"
+              data-category="endpoints"
+              data-legs="[4]"
+            />
+
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_tripod-024.svg"
+              data-category="endpoints"
+              data-legs="[0, 2, 4]"
+            />
+
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_leg-0.svg"
+              data-category="endpoints"
+              data-legs="[0]"
+            />
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_leg-3.svg"
+              data-category="endpoints"
+              data-legs="[3]"
+            />
+
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_tripod-135.svg"
+              data-category="endpoints"
+              data-legs="[1, 3, 5]"
+            />
+
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_leg-1.svg"
+              data-category="endpoints"
+              data-legs="[1]"
+            />
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_leg-2.svg"
+              data-category="endpoints"
+              data-legs="[2]"
+            />
+
+            <img
+              class="icon-button"
+              src="./src/assets/hexapod_all.svg"
+              data-category="endpoints"
+              data-legs="[0, 1, 2, 3, 4, 5]"
+            />
+          </section>
+          <section class="control">
+            <label>X</label>
+            <div class="input-group">
+              <input
+                data-category="endpoints"
+                data-parameter="x"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Y</label>
+            <div class="input-group">
+              <input
+                data-category="endpoints"
+                data-parameter="y"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Z</label>
+            <div class="input-group">
+              <input
+                data-category="endpoints"
+                data-parameter="z"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+        </article>
+        <article class="control-group" data-index="2">
+          <section class="button-grid">
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[5]"
+              src="./src/assets/hexapod_leg-5.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[4]"
+              src="./src/assets/hexapod_leg-4.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[0, 2, 4]"
+              src="./src/assets/hexapod_tripod-024.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[0]"
+              src="./src/assets/hexapod_leg-0.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[3]"
+              src="./src/assets/hexapod_leg-3.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[1, 3, 5]"
+              src="./src/assets/hexapod_tripod-135.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[1]"
+              src="./src/assets/hexapod_leg-1.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[2]"
+              src="./src/assets/hexapod_leg-2.svg"
+            />
+
+            <img
+              class="icon-button"
+              data-category="joints"
+              data-legs="[0, 1, 2, 3, 4, 5]"
+              src="./src/assets/hexapod_all.svg"
+            />
+          </section>
+          <section class="control">
+            <label>Coxa</label>
+            <div class="input-group">
+              <input
+                data-category="joints"
+                data-parameter="gamma"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Femur</label>
+            <div class="input-group">
+              <input
+                data-category="joints"
+                data-parameter="beta"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+          <section class="control">
+            <label>Tibia</label>
+            <div class="input-group">
+              <input
+                data-category="joints"
+                data-parameter="alpha"
+                step="any"
+                type="range"
+              />
+            </div>
+          </section>
+        </article>
+
+        <article class="" data-index="3">
+          <div class="about">
+            <div>
+              <p>
+                Hi! I'm Adil, the creator of this project,
+                which I developed to gain a deeper
+                understanding of hexapod kinematics. You can
+                <a href="https://github.com/mut-ex"
+                  >find me on GitHub</a
+                >.
+              </p>
+              <p>
+                The 3D visualization is powered by the
+                three.js library. The inverse kinematics
+                calculations use trigonometry instead of an
+                iterative solver, while forward kinematics
+                leverage Denavit–Hartenberg parameters.
+                Animations are achieved using Catmull-Rom
+                (centripetal) splines for interpolation and
+                Bézier curves for easing.
+              </p>
+              <p>
+                The interface is built with TypeScript,
+                SASS, and good old HTML.
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <nav>
+        <ol id="tab-buttons">
+          <li class="tab-button" data-index="0">body</li>
+          <li class="tab-button" data-index="1">
+            endpoints
+          </li>
+          <li class="tab-button" data-index="2">joints</li>
+          <li class="tab-button" data-index="3">about</li>
+        </ol>
+      </nav>
+    </main>
+
+    <div class="information">
+      <div class="mouse-position-container">
+        <div class="mouse-position" id="mouse-position-x">
+          <span>𝒙</span><span id="mouse-x">0.0</span>
+        </div>
+        <div class="mouse-position" id="mouse-position-y">
+          <span>𝒚</span><span id="mouse-y">0.0</span>
+        </div>
+        <div class="mouse-position" id="mouse-position-z">
+          <span>𝒛</span><span id="mouse-z">0.0</span>
+        </div>
+      </div>
+      <div class="matrix-4-by-4" id="matrix-display"></div>
+    </div>
+    <script type="module" src="./src/js/index.ts"></script>
+  </body>
+</html>
