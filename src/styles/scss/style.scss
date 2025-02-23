@@ -64,25 +64,6 @@ button {
   display: none;
 }
 
-.information {
-  position: absolute;
-  right: 1rem;
-  top: 0rem;
-  width: 256px;
-  height: 128px;
-  background-color: #ffffff00;
-  border-radius: 0.25rem;
-  padding: 0.75rem;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-end;
-  row-gap: 0.25rem;
-  display: none;
-  /* border: 1px solid white; */
-}
-
 .controls {
   display: flex;
   flex-direction: column;
