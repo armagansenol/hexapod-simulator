@@ -4,7 +4,7 @@
 <a href="https://hexapod-simulator.onrender.com/"><b>Try it out here!</b></a>
 </p>
 
-![Hexapod Solver GIF](hexapod.gif)
+<img style="border-radius:12px" src="hexapod.gif"/>
 
 ## Details
 
