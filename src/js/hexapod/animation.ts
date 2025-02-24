@@ -356,16 +356,30 @@ export class Animation {
       keypoints,
     )) {
       // console.log({ property: property, points: points });
+      if (property !== "endpoints") {
+        const curve = new THREE.CatmullRomCurve3(
+          points.map(
+            (point) => new THREE.Vector3(point, point, point),
+          ),
+        );
 
-      const curve = new THREE.CatmullRomCurve3(
-        points.map(
-          (point) => new THREE.Vector3(point, point, point),
-        ),
-      );
+        curve.curveType = 'catmullrom';
 
-      curve.curveType = 'catmullrom';
+        this.curves.set(property, curve);
+      } else {
+        const endpointGroups = points;
+        const endpointCurves = []
 
-      this.curves.set(property, curve);
+        for (let i = 0; i < 6; i++) {
+
+          const legPoints = endpointGroups.map((endpointGroup) => endpointGroup[i])
+          endpointCurves.push(new THREE.CatmullRomCurve3(legPoints));
+        }
+
+        this.curves.set("endpoints", endpointCurves);
+        console.log("curves = ", endpointCurves)
+      }
+
     }
 
   }
@@ -453,7 +467,9 @@ export class Animation {
 
     if (!this.curves.has(property)) return null;
 
-    return this.curves.get(property).getPoint(t).x;
+    if (property !== "endpoints") return this.curves.get(property).getPoint(t).x;
+
+    return this.curves.get("endpoints").map((endpointCurve) => endpointCurve.getPoint(t))
   }
 }
 

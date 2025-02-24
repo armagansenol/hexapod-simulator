@@ -13,12 +13,14 @@ export const enum Events {
   EndpointPositionChanged = "endpoint-position-changed",
 
   HexapodAnimationStarted = "animation-started",
-  HexapodAnimationFinished= "animation-finished",
+  HexapodAnimationFinished = "animation-finished",
   HexapodAnimationStopped = "animation-stopped",
 
   HexapodPoseUpdate = "hexapod-pose-update",
   HexapodJointAnglesUpdate = "hexapod-joint-angles-update",
-  HexapodEndpointPositionsUpdate = "hexapod-endpoint-positions-update"
+  HexapodEndpointPositionsUpdate = "hexapod-endpoint-positions-update",
+
+  ResetHexapod = "reset-hexapod",
 }
 
 // enum Categories {
@@ -31,8 +33,8 @@ export interface Animation {
   timescale?: null | number;
   poseInitial?: null | Pose | Partial<Pose>;
   poseFinal?: null | Pose | Partial<Pose>;
-  endpointsInitial?:null | Array<THREE.Vector3>;
-  endpointsFinal?:null | Array<THREE.Vector3>;
+  endpointsInitial?: null | Array<THREE.Vector3>;
+  endpointsFinal?: null | Array<THREE.Vector3>;
 };
 
 export type Source = "user" | "hexapod";

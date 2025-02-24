@@ -1,14 +1,8 @@
-import { JSONMeta } from "three";
 import { config } from "../configuration";
-import { deg2rad, assert } from "../utils";
-import { Hexapod } from "./body";
+import { deg2rad } from "../utils";
 
 import {
   Events,
-  JointAngles,
-  Pose,
-  Animation,
-  Source,
   Category,
   Parameter,
 } from "./common";
@@ -206,6 +200,15 @@ export class View extends EventTarget {
     buttonsGrid.forEach((grid) => {
       grid.addEventListener("click", this.handleButtonClick.bind(this));
     });
+
+    const resetButton = document.getElementById("reset-button") as HTMLDivElement
+    resetButton.style.opacity = '1';
+
+    resetButton.addEventListener("click", () => {
+      this.dispatchEvent(
+        new CustomEvent(Events.ResetHexapod)
+      )
+    })
   }
 
   /**

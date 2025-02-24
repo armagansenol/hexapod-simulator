@@ -85,7 +85,7 @@ export const config: Configuration = {
   sizeFloorPlane: [3.5, 3.5],
   camera: {
     fov: 40,
-    position: [0, -3.5, 3.5],
+    position: [0, -3.5, 2.5],
     // position: [4, 0, 3],
     near: 0.1,
     far: 1000,
@@ -112,7 +112,7 @@ export const config: Configuration = {
     }
   },
   orbitControls: {
-    autoRotate: false,
+    // autoRotate: true,
     enableDamping: true,
     dampingFactor: 0.1
   },

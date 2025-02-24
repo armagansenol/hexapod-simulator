@@ -4,13 +4,13 @@
 <a href="https://hexapod-simulator.onrender.com/"><b>Try it out here!</b></a>
 </p>
 
-<img style="border-radius:12px" src="hexapod.gif"/>
+<img style="border-radius:12px" src="demo.gif"/>
 
 ## Details
 
-The 3D visualization is powered by the three.js library. The inverse kinematics calculations use trigonometry instead of an iterative solver, while forward kinematics leverage Denavit–Hartenberg parameters. Animations are achieved using Catmull-Rom (centripetal) splines for interpolation and Bézier curves for easing.
+The 3D visualization is powered by the three.js library. The inverse kinematics calculations use trigonometry for a closed-form solution, while forward kinematics leverage Denavit–Hartenberg parameters. Animations are achieved using Catmull-Rom (centripetal) splines for interpolation and Bézier curves for easing.
 
-The interface is built with TypeScript, SASS, and good old HTML.
+I am still in the process of commenting and refactoring the code. Feel free to report any issues you face!
 
 ## Running Locally
 

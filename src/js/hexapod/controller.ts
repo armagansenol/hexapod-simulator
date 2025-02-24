@@ -64,6 +64,11 @@ export class HexapodController {
     const animator = new Animator(this.hexapod, this.model);
     this.animator = animator;
 
+    setTimeout(this.queueIntroAnimation.bind(this), 750)
+
+  }
+
+  queueIntroAnimation() {
     // Disable all sliders, play the intro animation then enable the sliders again.
     this.disableAllSliders();
     this.hexapodStand().then(() =>
@@ -71,9 +76,6 @@ export class HexapodController {
         .bind(this, 10)()
         .then(this.enableSliders.bind(this, "body")),
     );
-    // this.disableSliders("body", "endpoints")
-    // this.disableSliders("body")
-
   }
 
   hexapodStand() {
@@ -124,6 +126,17 @@ export class HexapodController {
           0,
           tilt,
           tilt,
+
+          tilt,
+          0,
+          -tilt,
+          -tilt,
+          -tilt,
+          0,
+          tilt,
+          tilt,
+
+
           0,
         ],
         pitch: [
@@ -146,6 +159,18 @@ export class HexapodController {
           -tilt,
           -tilt,
           0,
+
+          tilt,
+          tilt,
+          tilt,
+          0,
+          -tilt,
+          -tilt,
+          -tilt,
+          0,
+
+
+
           0,
         ],
         // z: Eazier([0.17, 0.5, 1, 0.5], 8),
@@ -254,6 +279,10 @@ export class HexapodController {
       Events.SliderInput,
       this.handleSliderInput.bind(this),
     );
+
+    // Handle reset button input
+
+    this.view.addEventListener(Events.ResetHexapod, this.resetHexapod.bind(this))
   }
 
   /**
@@ -578,5 +607,26 @@ export class HexapodController {
         oldEndpoints[indexes[0]][parameter],
       );
     }
+  }
+  resetHexapod() {
+    const pose = this.model.pose
+    const endpointsFrom = this.model.endpoints;
+
+    const endpointsTo: Array<THREE.Vector3> = []
+    for (let i = 0; i < 6; i++) {
+      endpointsTo.push(new THREE.Vector3(1, 0, 0));
+    }
+
+    this.animator.queueAnimation(
+      new Animation({
+        x: [pose.x, 0],
+        y: [pose.y, 0],
+        z: [pose.z, 0.4],
+        roll: [pose.roll, 0],
+        pitch: [pose.pitch, 0],
+        yaw: [pose.yaw, 0],
+        endpoints: [endpointsFrom, endpointsTo]
+      }).setEasing("ease-out").setDuration(0.5),
+    );
   }
 }
