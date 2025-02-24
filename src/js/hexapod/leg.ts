@@ -23,7 +23,7 @@ export class Leg extends EventTarget {
 
   private origin: THREE.Vector3;
   public localFrame: THREE.Object3D;
-  private coxa: THREE.Mesh;
+  public coxa: THREE.Mesh;
   private femur: THREE.Line;
   private tibia: THREE.Line;
 
@@ -89,13 +89,13 @@ export class Leg extends EventTarget {
     // Translate the femur along the x-axis to account for
     // the coxa length
     this.femur.position.set(config.hexapod.coxa.length, 0, 0);
-    this.femur.updateMatrixWorld();
+    // this.femur.updateMatrixWorld();
 
     this.tibia = this.createTibia();
     this.femur.add(this.tibia);
 
     this.tibia.position.set(this.femurLength, 0, 0);
-    this.tibia.updateMatrixWorld();
+    // this.tibia.updateMatrixWorld();
 
     this.scene.add(this.localFrame);
 
@@ -113,46 +113,6 @@ export class Leg extends EventTarget {
     this.localFrame.updateMatrixWorld(true);
   }
 
-  createCurve() {
-    // Define a 2D curve using CatmullRomCurve3
-    const points = [
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0.5, 0, 0.25),
-      new THREE.Vector3(1, 0, 0),
-
-      // new THREE.Vector3(0, 0.5, 0),
-      // new THREE.Vector3(1, -1, 0),
-      // new THREE.Vector3(2, 0, 0),
-    ];
-
-    const curve = new THREE.CatmullRomCurve3(points);
-    curve.curveType = "catmullrom";
-
-    // Generate curve points
-    const curvePoints = curve.getPoints(3);
-    // const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
-    const geometry = new MeshLineGeometry()
-    geometry.setPoints(curvePoints)
-    const material = new MeshLineMaterial({
-      color: new THREE.Color(0xffff00),
-      // side: THREE.DoubleSide,
-      lineWidth: 0.01,
-      resolution: new THREE.Vector2(1024,1204)
-    });
-
-    // Create a thin strip to visualize the curve as a mesh
-    const mesh= new THREE.Mesh(geometry, material);
-    // mesh.setGeometry(geometry)
-    mesh.castShadow =true;
-    if (this.id === 1){
-
-      mesh.position.z = -0.5
-      mesh.updateMatrixWorld()
-      mesh.rotateZ(deg2rad(30))
-    }
-    return mesh;
-  }
-
   /**
    * Creates a local coordinate frame (transformation) with specified origin and rotation.
    *
@@ -164,8 +124,6 @@ export class Leg extends EventTarget {
     frame.rotateZ(this.id * (Math.PI / 3));
     frame.updateMatrixWorld();
 
-    // frame.add(this.createCurve());
-
     return frame;
   }
 
@@ -176,7 +134,7 @@ export class Leg extends EventTarget {
    */
   createCoxa(): THREE.Mesh {
     const sphere = createSphere({
-      color: "#" + numberToHexString(config.hexapod.coxa.color),
+      color: config.hexapod.coxa.color,
       radius: config.hexapod.coxa.radius,
     });
     sphere.scale.z = 1;
@@ -201,7 +159,7 @@ export class Leg extends EventTarget {
       points: points,
       radiusTop: config.hexapod.femur.radiusTop,
       radiusBottom: config.hexapod.femur.radiusBottom,
-      color: "#" + numberToHexString(config.hexapod.femur.color),
+      color: config.hexapod.femur.color,
     });
 
     mesh.add(cylinder);
@@ -227,11 +185,11 @@ export class Leg extends EventTarget {
       points: points,
       radiusTop: config.hexapod.tibia.radiusTop,
       radiusBottom: config.hexapod.tibia.radiusBottom,
-      color: "#" + numberToHexString(config.hexapod.tibia.color),
+      color: config.hexapod.tibia.color,
     });
 
     const sphere = createSphere({
-      color: "#" + numberToHexString(config.hexapod.colorKnee),
+      color: config.hexapod.colorKnee,
       radius: 0.06,
     });
 
@@ -271,17 +229,42 @@ export class Leg extends EventTarget {
   updateLocalFrame(pose: Pose) {
     const id = `LEG-${this.id}`;
 
+    // console.groupCollapsed(id, "updateLocalFrame");
+
     const euler = new THREE.Euler(pose.roll, pose.pitch, pose.yaw);
-
-    const origin = this.origin.clone();
-
-    origin.applyEuler(euler);
 
     const translation = new THREE.Vector3(pose.x, pose.y, pose.z);
 
+    const origin = this.origin.clone();
+
+    // console.log(id, "Origin initial", {
+    //   x: origin.x.toFixed(2), y: origin.y.toFixed(2), z: origin.z.toFixed(2),
+    // })
+
     origin.add(translation);
 
+    // console.log(id, "Origin after translation", {
+    //   x: origin.x.toFixed(2), y: origin.y.toFixed(2), z: origin.z.toFixed(2),
+    // })
+
+    origin.applyEuler(euler);
+
+    // console.log(id, "Origin after applying euler", {
+    //   x: origin.x.toFixed(2), y: origin.y.toFixed(2), z: origin.z.toFixed(2),
+    // })
+
+    // console.log(id, "Local frame position before", {
+    //   x: this.localFrame.position.x.toFixed(2), y: this.localFrame.position.y.toFixed(2), z: this.localFrame.position.z.toFixed(2),
+    // })
+
+
     this.localFrame.position.set(origin.x, origin.y, origin.z);
+
+    // console.log(id, "Local frame position after", {
+    //   x: this.localFrame.position.x.toFixed(2), y: this.localFrame.position.y.toFixed(2), z: this.localFrame.position.z.toFixed(2),
+    // })
+
+    // console.groupEnd();
 
     this.localFrame.updateMatrixWorld(true);
   }
@@ -303,13 +286,6 @@ export class Leg extends EventTarget {
     this.tibia.rotation.y = angles.alpha;
 
     this.localFrame.updateMatrixWorld(true);
-
-    // this.dispatchEvent(new CustomEvent(Events.HexapodJointAnglesUpdate, {
-    //   detail: {
-    //     id: this.id,
-    //     angles: angles,
-    //   },
-    // }));
   }
 
   /**
@@ -336,8 +312,9 @@ export class Leg extends EventTarget {
 
     const id = `LEG-${this.id}`;
 
-    if (targetPosition.z < 0) {
-      targetPosition.z = 0;
+    if (targetPosition.z < -0.1) {
+      // targetPosition.z = 0;
+      return false;
       // let value = Number((targetPosition.z*100).toFixed(4))
 
       // console.log(value)
@@ -428,7 +405,7 @@ export class Leg extends EventTarget {
     if (localFrameWorldPosition.z <= config.hexapod.coxa.radius) {
       return false;
     }
-    // this.oldZ = targetPosition.z;
+
     return {
       alpha: alpha,
       beta: beta,
@@ -467,6 +444,7 @@ export class Leg extends EventTarget {
       linkLength: 0,
       linkTwist: Math.PI / 2,
       linkOffset: 0,
+      // linkOffset: -config.hexapod.coxa.length,
       jointAngle: gamma,
     });
 
@@ -563,10 +541,10 @@ function createDHMatrix({ linkLength, linkTwist, linkOffset, jointAngle }) {
 
   // prettier-ignore
   const T = new THREE.Matrix4(
-    cTheta, -sTheta*cAlpha,  sTheta*sAlpha, a*cTheta,
-    sTheta,  cTheta*cAlpha, -cTheta*sAlpha, a*sTheta,
-         0,         sAlpha,         cAlpha,        d,
-         0,              0,              0,        1
+    cTheta, -sTheta * cAlpha, sTheta * sAlpha, a * cTheta,
+    sTheta, cTheta * cAlpha, -cTheta * sAlpha, a * sTheta,
+    0, sAlpha, cAlpha, d,
+    0, 0, 0, 1
   )
 
   return T;
@@ -588,10 +566,10 @@ function updateDHMatrix(
 
   // prettier-ignore
   const T = matrix.set(
-    cTheta, -sTheta*cAlpha,  sTheta*sAlpha, a*cTheta,
-    sTheta,  cTheta*cAlpha, -cTheta*sAlpha, a*sTheta,
-         0,         sAlpha,         cAlpha,        d,
-         0,              0,              0,        1
+    cTheta, -sTheta * cAlpha, sTheta * sAlpha, a * cTheta,
+    sTheta, cTheta * cAlpha, -cTheta * sAlpha, a * sTheta,
+    0, sAlpha, cAlpha, d,
+    0, 0, 0, 1
   )
 
   return T;

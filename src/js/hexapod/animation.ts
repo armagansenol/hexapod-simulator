@@ -80,7 +80,6 @@ export class Bezier {
   constructor(points) {
     this.B = [];
 
-    console.log(typeof points, Array.isArray(points))
     if (points) {
 
       if (Array.isArray(points)) {

@@ -43,27 +43,23 @@ interface Hexapod {
     // thickness: number,
     scale: { x: number, y: number, z: number },
   };
-  colorBody: number;
-  height: number;
-  radius: number;
-  thickness: number;
   coxa: {
     scale: { x: number, y: number, z: number },
     length: number,
-    color: number,
+    color: string,
     thickness: number,
     radius: number,
   };
   femur: {
-    color: number,
+    color: string,
     length: number,
     radiusBottom: number,
     radiusTop: number,
     thickness: number,
   };
-  colorKnee: number;
+  colorKnee: string;
   tibia: {
-    color: number,
+    color: string,
     length: number,
     radiusBottom: number,
     radiusTop: number,
@@ -125,31 +121,26 @@ export const config: Configuration = {
       color: lightMode ? 0x7ae582 : 0x7ae582,
       height: 0.17,
       // height: 0.5,
-
       radius: 0.5,
-      scale: { x: 1, y: 1.2, z: 0.3 },
+      scale: { x: 1, y: 1, z: 0.5 },
     },
-    colorBody: lightMode ? 0x7ae582 : 0x7ae582,
-    height: 0.25,
-    radius: 0.5,
-    thickness: 0.125,
     coxa: {
-      scale: { x: 1, y: 1.2, z: 0 },
+      scale: { x: 1, y: 1, z: 0 },
       length: 0,
-      color: lightMode ? 0x7ae582 : 0x7ae582,
+      color: lightMode ? "#7ae582" : "#7ae582",
       thickness: 0.125,
       radius: 0.1,
     },
     femur: {
-      color: lightMode ? 0x7ae582 : 0x7ae582,
+      color: lightMode ? "#7ae582" : "#7ae582",
       length: 0.5,
       radiusBottom: 0.1,
       radiusTop: 0.06,
       thickness: 0.05,
     },
-    colorKnee: lightMode ? 0x7678ed : 0x7678ed,
+    colorKnee: lightMode ? "#7678ed" : "#7678ed",
     tibia: {
-      color: lightMode ? 0x7678ed : 0x7678ed,
+      color: lightMode ? "#7678ed" : "#7678ed",
       length: 0.7,
       radiusBottom: 0.06,
       radiusTop: 0.01,

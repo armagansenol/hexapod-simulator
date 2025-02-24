@@ -276,8 +276,6 @@ export class View extends EventTarget {
 
     event.stopImmediatePropagation();
 
-    console.log("Tab changed!");
-
     this.dispatchEvent(
       new CustomEvent(Events.TabSwitched, {
         detail: detail,

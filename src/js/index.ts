@@ -1,12 +1,5 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { MeshLineGeometry, MeshLineMaterial } from "meshline";
-import {
-  DepthOfFieldEffect,
-  EffectComposer,
-  EffectPass,
-  RenderPass,
-} from "postprocessing";
 import { config } from "./configuration.ts";
 import { HexapodController } from "./hexapod/controller.ts";
 import { numberToHexString } from "./utils.js";
@@ -187,7 +180,6 @@ class App {
     // });
     // mesh = new THREE.Mesh(geometry, material);
     // scene.add(mesh);
-
     return scene;
   }
 
@@ -267,7 +259,6 @@ class App {
 
     light.position.set(...config.lights.directional.position);
 
-    console.log(config.lights.directional.shadow.cast);
     if (config.lights.directional.shadow.cast) {
       light.castShadow = config.lights.directional.shadow.cast;
       light.shadow.mapSize.width =

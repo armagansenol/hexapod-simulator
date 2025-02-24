@@ -43,8 +43,6 @@ export class HexapodController {
     this.hexapod = new Hexapod(scene);
     this.model = new Model();
 
-    this.hexapod.setModel(this.model);
-
     this.view = new View();
 
     // Register view event listeners
@@ -71,8 +69,11 @@ export class HexapodController {
     this.hexapodStand().then(() =>
       this.hexapodWiggle
         .bind(this, 10)()
-        .then(this.enableAllSliders.bind(this)),
+        .then(this.enableSliders.bind(this, "body")),
     );
+    // this.disableSliders("body", "endpoints")
+    // this.disableSliders("body")
+
   }
 
   hexapodStand() {
@@ -164,7 +165,6 @@ export class HexapodController {
       Events.TabSwitched,
       (event: Event) => {
         const detail = (<CustomEvent>event).detail;
-        console.log('Controller, tab switched; ', detail);
 
         let category = this.model.getCategory();
 
@@ -393,10 +393,32 @@ export class HexapodController {
     this.view.disableSliders('endpoints');
   }
 
+  disableSliders(...sliders) {
+    const target = sliders;
+    const categories = ['body', 'joints', 'endpoints']
+
+    target.forEach((category) => {
+      if (categories.includes(category)) {
+        this.view.disableSliders(category)
+      }
+    })
+  }
+
   enableAllSliders() {
     this.view.enableSliders('body');
     this.view.enableSliders('joints');
     this.view.enableSliders('endpoints');
+  }
+
+  enableSliders(...sliders) {
+    const target = sliders;
+    const categories = ['body', 'joints', 'endpoints']
+
+    target.forEach((category) => {
+      if (categories.includes(category)) {
+        this.view.enableSliders(category)
+      }
+    })
   }
 
   animate() {

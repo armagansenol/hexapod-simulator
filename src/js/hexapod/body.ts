@@ -1,81 +1,20 @@
-import * as THREE from "three";
-import { Timer } from "three/examples/jsm/Addons.js";
-
-import { config } from "../configuration.ts";
+import * as THREE from 'three';
+import { config } from '../configuration.ts';
 import {
-  deg2rad,
-  rad2deg,
+  Events,
+  JointAngles,
+  Pose,
+} from './common';
+import {
   sampleCircle,
-  sq,
-  sqrt,
-  V3,
-  createCylinderAligned,
-  createLine,
-  // cubicBezier,
-  easeInOutCubic,
-} from "../utils";
-import { Leg } from "./leg";
-import { Events, JointAngles, Pose, Animation } from "./common";
-import { Model } from "./model.ts";
-import { Animator } from "./animation.ts";
-
-function makeLerpEndpointFunc(initial: THREE.Vector3, final: THREE.Vector3) {
-  const current = new THREE.Vector3();
-
-  return function (t: number): THREE.Vector3 {
-    current.lerpVectors(initial, final, t);
-    return current;
-  };
-}
-
-function makeLerpPoseFunc(initial: Pose, final: Pose) {
-  const position = new THREE.Vector3();
-  const rotation = new THREE.Vector3();
-
-  const initialPosition = new THREE.Vector3(initial.x, initial.y, initial.z);
-  const initialRotation = new THREE.Vector3(
-    initial.roll,
-    initial.pitch,
-    initial.yaw
-  );
-
-  const finalPosition = new THREE.Vector3(final.x, final.y, final.z);
-  const finalRotation = new THREE.Vector3(final.roll, final.pitch, final.yaw);
-
-  return function (t: number): Pose {
-    position.lerpVectors(initialPosition, finalPosition, t);
-    rotation.lerpVectors(initialRotation, finalRotation, t);
-
-    return {
-      x: position.x,
-      y: position.y,
-      z: position.z,
-      roll: rotation.x,
-      pitch: rotation.y,
-      yaw: rotation.z,
-    };
-  };
-}
+} from '../utils';
+import { Leg } from './leg';
 
 export class Hexapod extends EventTarget {
   public scene: THREE.Scene;
 
   public legs: Array<Leg>;
-  public mesh: THREE.Mesh;
-  private timer: Timer;
-
-  private animationID: number;
-  private animationQueue: Array<Animation>;
-  private currentAnimation: null | Animation;
-  private isAnimationPaused: boolean;
-  private lerpEndpoints: Array<(t: number) => THREE.Vector3>;
-  private lerpPose: (t: number) => Pose;
-  private t: number;
-  public animationDirection: "forward" | "backward";
-  private lastEndpoints;
-  private model: Model;
-  private animator: Animator;
-
+  private mesh: THREE.Mesh;
   /**
    * Creates an instance of a hexapod
    * @param {THREE.Scene} scene - The Three.js scene where the hexapod exists
@@ -84,30 +23,14 @@ export class Hexapod extends EventTarget {
     super();
 
     this.scene = scene;
-    this.timer = new Timer();
 
     const coxaPoints = this.calculateCoxaPoints();
 
-    this.mesh = this.createMesh(coxaPoints);
-    scene.add(this.mesh);
-
     this.legs = this.createLegs(coxaPoints);
 
-    // For animating
-    this.animationID = 0;
-    this.animationQueue = [];
-    this.currentAnimation = null;
-    this.isAnimationPaused = false;
-    this.animationDirection = "forward";
-    // this.lerpEndpoints = null;
-    // this.lerpPose = null;
-    this.t = 0;
+    this.mesh = this.createMesh(coxaPoints);
 
-    this.lastEndpoints = null;
-  }
-
-  setAnimator(animator) {
-    this.animator = animator;
+    scene.add(this.mesh);
   }
 
   /**
@@ -129,12 +52,40 @@ export class Hexapod extends EventTarget {
     matrix.makeScale(
       config.hexapod.coxa.scale.x,
       config.hexapod.coxa.scale.y,
-      config.hexapod.coxa.scale.z
+      config.hexapod.coxa.scale.z,
     );
 
-    const scaledPoints = points.map((pt) => pt.applyMatrix4(matrix));
+    const scaledPoints = points.map((pt) =>
+      pt.applyMatrix4(matrix),
+    );
 
     return scaledPoints;
+  }
+
+  /**
+   * Creates a new extrude geometry based on the shape created by the provided points
+   * 
+   * @param {Array<THREE.Vector2>} points - An array of 
+   * coxa x and y positions.  
+   * @returns {THREE.ExtrudeGeometry} - The extruded 
+   * geometry resulting from the points
+   */
+  createExtrudeGeometry(points: Array<THREE.Vector2>): THREE.ExtrudeGeometry {
+    const shape = new THREE.Shape(points);
+
+    const extrudeSettings = {
+      depth: 0.1,
+      bevelEnabled: true,
+      curveSegments: 3,
+      bevelSize: 0.1 * 2,
+      bevelOffset: -0.15,
+      bevelSegments: 32,
+    };
+
+    return new THREE.ExtrudeGeometry(
+      shape,
+      extrudeSettings,
+    );
   }
 
   /**
@@ -154,47 +105,40 @@ export class Hexapod extends EventTarget {
       vertices[i * 3 + 2] = point.z;
     });
 
-    const skeletonGeometry = new THREE.BufferGeometry();
-
-    const buffer = new THREE.BufferAttribute(vertices, 3);
-
-    skeletonGeometry.setAttribute("position", buffer);
-
-    const skeletonMaterial = new THREE.MeshBasicMaterial({
-      opacity: 0,
-      transparent: true,
-    });
-
-    const skeleton = new THREE.Mesh(skeletonGeometry, skeletonMaterial);
-
-    skeleton.scale.x = config.hexapod.body.scale.x;
-    skeleton.scale.y = config.hexapod.body.scale.y;
-    skeleton.scale.z = config.hexapod.body.scale.z;
-
-    // Skin is the visibile part of the body
-
-    const skinGeometry = new THREE.CapsuleGeometry(
-      config.hexapod.body.radius,
-      0.01,
-      8,
-      6
+    const shapePoints = points.map(
+      (point) => new THREE.Vector2(point.x, point.y),
     );
 
-    const skinMaterial = new THREE.MeshPhysicalMaterial({
+    const material = new THREE.MeshPhysicalMaterial({
       iridescence: 1,
-      color: config.hexapod.colorBody,
+      color: config.hexapod.body.color,
     });
 
-    const skin = new THREE.Mesh(skinGeometry, skinMaterial);
-    skin.rotation.x = Math.PI / 2;
-    skin.rotation.y = Math.PI / 2;
+    const mesh = new THREE.Mesh(this.createExtrudeGeometry(shapePoints), material);
 
-    skin.castShadow = config.shadows;
-    skin.receiveShadow = config.shadows;
+    mesh.scale.set(config.hexapod.body.scale.x, config.hexapod.body.scale.y, config.hexapod.body.scale.z)
 
-    skeleton.add(skin);
+    mesh.castShadow = config.shadows;
+    mesh.receiveShadow = config.shadows;
 
-    return skeleton;
+    return mesh;
+  }
+
+  /**
+   * Updates the mesh geometry to reflect the new coxa 
+   * joint positions.
+   */
+  updateMesh() {
+    const shapePoints = this.legs.map((leg) => {
+      const position = new THREE.Vector3();
+      leg.localFrame.getWorldPosition(position);
+      return new THREE.Vector2(position.x, position.y);
+    });
+
+    this.mesh.geometry.dispose();
+
+    this.mesh.geometry =
+      this.createExtrudeGeometry(shapePoints);
   }
 
   /**
@@ -204,195 +148,18 @@ export class Hexapod extends EventTarget {
    */
   createLegs(coxaPoints: Array<THREE.Vector3>): Array<Leg> {
     const legs = [] as Array<Leg>;
+
     let legIndexes = [0, 1, 2, 3, 4, 5];
+
     legIndexes.forEach((legIndex) => {
-      const leg = new Leg(legIndex, coxaPoints[legIndex], this.scene);
-
-      // leg.addEventListener(Events.HexapodJointAnglesUpdate, (e) => {
-      //   this.dispatchEvent(
-      //     new CustomEvent(Events.HexapodJointAnglesUpdate, {
-      //       detail: (<CustomEvent>e).detail,
-      //     })
-      //   );
-      // });
-
-      // leg.addEventListener(Events.HexapodEndpointPositionsUpdate, (e) => {
-      //   this.dispatchEvent(
-      //     new CustomEvent(Events.HexapodEndpointPositionsUpdate, {
-      //       detail: (<CustomEvent>e).detail,
-      //     })
-      //   );
-      // });
-
+      const leg = new Leg(
+        legIndex,
+        coxaPoints[legIndex],
+        this.scene,
+      );
       legs.push(leg);
     });
     return legs;
-  }
-
-  /**
-   * Sets the model representation for the hexapod
-   * @param {Model} model - The model to be set
-   */
-  setModel(model: Model) {
-    this.model = model;
-
-    // this.model.addEventListener(Events.SliderValuesChanged,this.handleSliderValuesChanged.bind(this))
-  }
-
-  /** Pauses the current animation */
-  pauseAnimation() {
-    this.isAnimationPaused = true;
-  }
-
-  /** Resumes the current animation */
-  resumeAnimation() {
-    this.isAnimationPaused = false;
-  }
-
-  /**
-   * Adds an animation to the queue
-   * @param {Animation} animation - The animation to be queued
-   */
-  queueAnimation(animation: Animation) {
-    this.animationID = this.animationID + 1;
-
-    this.animationQueue.push({
-      id: this.animationID,
-      timescale: animation.timescale || 1,
-      poseInitial: animation.poseInitial,
-      poseFinal: animation.poseFinal,
-      endpointsInitial: animation.endpointsInitial,
-      endpointsFinal: animation.endpointsFinal,
-    });
-    console.log("Animation queued: ", this.animationQueue);
-  }
-
-  /**
-   * Starts a given animation
-   * @param {Animation} animation - The animation to be started
-   */
-  startAnimation(animation: Animation) {
-    this.currentAnimation = animation;
-    const pose = this.model.pose;
-    const initialPose = animation.poseInitial || pose;
-
-    initialPose.x = initialPose.x ?? pose.x;
-    initialPose.y = initialPose.y ?? pose.y;
-    initialPose.z = initialPose.z ?? pose.z;
-    initialPose.roll = initialPose.roll ?? pose.roll;
-    initialPose.pitch = initialPose.pitch ?? pose.pitch;
-    initialPose.yaw = initialPose.yaw ?? pose.yaw;
-
-    const finalPose = animation.poseFinal || this.model.pose;
-
-    finalPose.x = finalPose.x ?? pose.x;
-    finalPose.y = finalPose.y ?? pose.y;
-    finalPose.z = finalPose.z ?? pose.z;
-    finalPose.roll = finalPose.roll ?? pose.roll;
-    finalPose.pitch = finalPose.pitch ?? pose.pitch;
-    finalPose.yaw = finalPose.yaw ?? pose.yaw;
-
-    const endpointsInitial = animation.endpointsInitial || this.model.endpoints;
-    const endpointsFinal = animation.endpointsFinal || this.model.endpoints;
-
-    this.lerpPose = makeLerpPoseFunc(<Pose>initialPose, <Pose>finalPose);
-
-    this.lerpEndpoints = [];
-    for (let i = 0; i < 6; i++) {
-      this.lerpEndpoints.push(
-        makeLerpEndpointFunc(endpointsInitial[i], endpointsFinal[i])
-      );
-    }
-
-    this.t = 0;
-
-    this.dispatchEvent(
-      new CustomEvent(Events.HexapodAnimationStarted, {
-        detail: {
-          animation: this.currentAnimation,
-        },
-      })
-    );
-  }
-
-  /**
-   * Handles the animation step logic
-   */
-  animate() {
-    if (this.isAnimationPaused) return;
-
-    // if (this.animator) this.animator.step();
-
-    this.timer.update();
-
-    if (!this.currentAnimation && this.animationQueue.length === 0) {
-      return;
-    }
-
-    if (!this.currentAnimation) {
-      let animation;
-      if (this.animationDirection === "forward") {
-        animation = this.animationQueue.shift() as Animation;
-      } else {
-        animation = this.animationQueue.pop() as Animation;
-      }
-      this.startAnimation(animation);
-      return;
-    }
-
-    const timescale = <number>this.currentAnimation.timescale;
-
-    const delta = this.timer.getDelta();
-
-    if (this.t >= 1) {
-      this.dispatchEvent(
-        new CustomEvent(Events.HexapodAnimationFinished, {
-          detail: {
-            animation: this.currentAnimation,
-            endpoints: this.lastEndpoints,
-          },
-        })
-      );
-
-      if (this.animationQueue.length > 0) {
-        let animation;
-        if (this.animationDirection === "forward") {
-          animation = this.animationQueue.shift() as Animation;
-        } else {
-          animation = this.animationQueue.pop() as Animation;
-        }
-        this.startAnimation(animation);
-      } else {
-        this.currentAnimation = null;
-        return;
-      }
-    }
-
-    const t = easeInOutCubic(this.t);
-
-    const pose = this.lerpPose(t);
-    const endpoints = this.legs.map((_, index) => this.lerpEndpoints[index](t));
-
-    let success = this.updateBodyIK(pose, endpoints);
-
-    if (!success) {
-      console.log("Invalid state! Ending animation.");
-      this.dispatchEvent(
-        new CustomEvent(Events.HexapodAnimationStopped, {
-          detail: {
-            animation: this.currentAnimation,
-            reason: "IK FAILURE",
-          },
-        })
-      );
-      this.currentAnimation = null;
-      return;
-    }
-
-    this.lastEndpoints = endpoints;
-
-    this.t += timescale * delta;
-    if (this.t > 1) this.t = 1;
   }
 
   /**
@@ -400,20 +167,25 @@ export class Hexapod extends EventTarget {
    * @param {Pose} pose - The pose to be applied
    */
   setPose(pose: Pose) {
-    this.mesh.position.x = pose.x;
-    this.mesh.position.y = pose.y;
+    // Ignoring x, y, and z because the mesg
+    this.updateMesh();
+
+    // this.mesh.position.x = pose.x;
+    // this.mesh.position.y = pose.y;
     this.mesh.position.z = pose.z;
 
     this.mesh.rotation.x = pose.roll;
     this.mesh.rotation.y = pose.pitch;
-    this.mesh.rotation.z = pose.yaw;
+    // this.mesh.rotation.z = pose.yaw;
+
+    this.mesh.updateMatrixWorld(true);
 
     this.dispatchEvent(
       new CustomEvent(Events.HexapodPoseUpdate, {
         detail: {
           pose: pose,
         },
-      })
+      }),
     );
   }
 
@@ -426,15 +198,19 @@ export class Hexapod extends EventTarget {
    */
   updateBodyFK(
     pose: Pose,
-    joints: Array<JointAngles>
+    joints: Array<JointAngles>,
   ): boolean | Array<THREE.Vector3> {
     console.log(joints);
 
-    const endpoints: Array<THREE.Vector3> = this.legs.map((leg, index) =>
-      leg.calculateForwardKinematics(pose, joints[index])
+    const endpoints: Array<THREE.Vector3> = this.legs.map(
+      (leg, index) =>
+        leg.calculateForwardKinematics(pose, joints[index]),
     );
 
-    let success = this.updateBodyIK(pose, endpoints as Array<THREE.Vector3>);
+    let success = this.updateBodyIK(
+      pose,
+      endpoints as Array<THREE.Vector3>,
+    );
 
     if (!success) return false;
 
@@ -449,12 +225,21 @@ export class Hexapod extends EventTarget {
    * @returns {boolean} - True if successful, false
    * otherwise
    */
-  updateBodyIK(pose: Pose, endpoints: Array<THREE.Vector3>): boolean {
-    const joints: (boolean | JointAngles)[] = this.legs.map((leg, index) =>
-      leg.calculateInverseKinematics(pose, endpoints[index])
+  updateBodyIK(
+    pose: Pose,
+    endpoints: Array<THREE.Vector3>,
+  ): boolean {
+    const joints: (boolean | JointAngles)[] = this.legs.map(
+      (leg, index) =>
+        leg.calculateInverseKinematics(
+          pose,
+          endpoints[index],
+        ),
     );
 
-    const success = joints.every((angles) => angles !== false);
+    const success = joints.every(
+      (angles) => angles !== false,
+    );
 
     // success ? console.log("IK success!") : console.log("IK failure!");
 
@@ -462,18 +247,21 @@ export class Hexapod extends EventTarget {
       return false;
     }
 
-    this.setPose(pose);
-
     this.legs.map((leg, index) => {
       leg.setJointAngles(pose, <JointAngles>joints[index]);
     });
 
+    this.setPose(pose);
+
     this.dispatchEvent(
-      new CustomEvent(Events.HexapodEndpointPositionsUpdate, {
-        detail: {
-          endpoints: endpoints,
+      new CustomEvent(
+        Events.HexapodEndpointPositionsUpdate,
+        {
+          detail: {
+            endpoints: endpoints,
+          },
         },
-      })
+      ),
     );
 
     this.dispatchEvent(
@@ -481,23 +269,9 @@ export class Hexapod extends EventTarget {
         detail: {
           jointAngles: joints,
         },
-      })
+      }),
     );
 
     return true;
   }
-}
-
-function dumpV3(id: string, title: string, v: THREE.Vector3 | THREE.Vector4) {
-  // return;
-  console.log(
-    id,
-    title,
-    "x",
-    v.x.toFixed(2),
-    ",y",
-    v.y.toFixed(2),
-    ",z",
-    (v.z * 100).toFixed(2)
-  );
 }
