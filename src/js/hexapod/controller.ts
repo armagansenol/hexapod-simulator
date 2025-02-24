@@ -611,22 +611,96 @@ export class HexapodController {
   resetHexapod() {
     const pose = this.model.pose
     const endpointsFrom = this.model.endpoints;
-
     const endpointsTo: Array<THREE.Vector3> = []
     for (let i = 0; i < 6; i++) {
       endpointsTo.push(new THREE.Vector3(1, 0, 0));
     }
-
     this.animator.queueAnimation(
       new Animation({
         x: [pose.x, 0],
         y: [pose.y, 0],
         z: [pose.z, 0.4],
-        roll: [pose.roll, 0],
+        roll: [this.model.pose.roll, 0],
         pitch: [pose.pitch, 0],
         yaw: [pose.yaw, 0],
         endpoints: [endpointsFrom, endpointsTo]
       }).setEasing("ease-out").setDuration(0.5),
-    );
+    )
+
+    // .then(() => {
+    //   this.animator.queueAnimation(
+    //     new Animation({
+    //       // x: [pose.x, 0],
+    //       // y: [pose.y, 0],
+    //       // z: [pose.z, 0.4],
+    //       roll: [this.model.pose.roll, 0],
+    //       pitch: [pose.pitch, 0],
+    //       yaw: [pose.yaw, 0],
+    //       // endpoints: [endpointsFrom, endpointsTo]
+    //     }).setEasing("ease-out").setDuration(0.25),
+    //   ).then(() => {
+    //     this.animator.queueAnimation(
+    //       new Animation({
+    //         x: [pose.x, 0],
+    //         y: [pose.y, 0],
+    //         z: [pose.z, 0.4],
+    //         roll: [this.model.pose.roll, 0],
+    //         pitch: [pose.pitch, 0],
+    //         yaw: [pose.yaw, 0],
+    //         endpoints: [endpointsFrom, endpointsTo]
+    //       }).setEasing("ease-out").setDuration(0.25),
+    //     )
+    //   })
+    // }, () => {
+    //   this.animator.queueAnimation(
+    //     new Animation({
+    //       // x: [pose.x, 0],
+    //       // y: [pose.y, 0],
+    //       // z: [pose.z, 0.4],
+    //       roll: [this.model.pose.roll, 0],
+    //       pitch: [pose.pitch, 0],
+    //       yaw: [pose.yaw, 0],
+    //       // endpoints: [endpointsFrom, endpointsTo]
+    //     }).setEasing("ease-out").setDuration(0.25),
+    //   ).then(() => {
+    //     this.animator.queueAnimation(
+    //       new Animation({
+    //         x: [pose.x, 0],
+    //         y: [pose.y, 0],
+    //         z: [pose.z, 0.4],
+    //         roll: [this.model.pose.roll, 0],
+    //         pitch: [pose.pitch, 0],
+    //         yaw: [pose.yaw, 0],
+    //         endpoints: [endpointsFrom, endpointsTo]
+    //       }).setEasing("ease-out").setDuration(0.25),
+    //     )
+    //   })
+    // })
+
+    // this.animator.queueAnimation(
+    //   new Animation({
+    //     // x: [pose.x, 0],
+    //     // y: [pose.y, 0],
+    //     // z: [pose.z, 0.4],
+    //     // roll: [pose.roll, 0],
+    //     pitch: [pose.pitch, 0],
+    //     // yaw: [pose.yaw, 0],
+    //     // endpoints: [endpointsFrom, endpointsTo]
+    //   }).setEasing("ease-out").setDuration(0.5),
+    // );
+
+
+    // this.animator.queueAnimation(
+    //   new Animation({
+    //     x: [pose.x, 0],
+    //     y: [pose.y, 0],
+    //     z: [pose.z, 0.4],
+    //     roll: [pose.roll, 0],
+    //     pitch: [pose.pitch, 0],
+    //     yaw: [pose.yaw, 0],
+    //     endpoints: [endpointsFrom, endpointsTo]
+    //   }).setEasing("ease-out").setDuration(0.5),
+    // );
+
   }
 }

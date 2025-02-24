@@ -375,9 +375,7 @@ export class Animation {
           const legPoints = endpointGroups.map((endpointGroup) => endpointGroup[i])
           endpointCurves.push(new THREE.CatmullRomCurve3(legPoints));
         }
-
-        this.curves.set("endpoints", endpointCurves);
-        console.log("curves = ", endpointCurves)
+        this.curves.set("endpoints", endpointCurves)
       }
 
     }
@@ -469,7 +467,9 @@ export class Animation {
 
     if (property !== "endpoints") return this.curves.get(property).getPoint(t).x;
 
-    return this.curves.get("endpoints").map((endpointCurve) => endpointCurve.getPoint(t))
+    const endpoints = this.curves.get("endpoints").map((endpointCurve) => endpointCurve.getPoint(t))
+
+    return endpoints
   }
 }
 
@@ -567,6 +567,10 @@ export class Animator {
     // const anim = this.currentAnimation as Animation;
     let t = this.t;
 
+    if (t === 0) {
+      t = t + 0.01
+    }
+
     if (anim.getDirection() === 'reverse') {
       t = 1 - t;
     } else if (
@@ -580,6 +584,18 @@ export class Animator {
     // t = easeInOut(t)
 
     const currentPose = this.model.pose;
+
+
+    // console.log("roll", almostEqual(anim.at(t, 'roll'), currentPose.roll))
+    const samePose = almostEqual(anim.at(1, 'x'), currentPose.x) && almostEqual(anim.at(1, 'y'), currentPose.y) && almostEqual(anim.at(1, 'z'), currentPose.z) && almostEqual(anim.at(1, 'roll'), currentPose.roll) && almostEqual(anim.at(1, 'pitch'), currentPose.pitch) && almostEqual(anim.at(1, 'yaw'), currentPose.yaw)
+
+    // console.log("samePose = ", samePose)
+
+    if (samePose) {
+      this.currentAnimation._promise.resolve()
+      this.currentAnimation = null;
+      return;
+    }
 
     const newPose = {
       x: anim.at(t, 'x') || currentPose.x,
@@ -595,7 +611,7 @@ export class Animator {
     const newEndpoints =
       anim.at(t, 'endpoints') || currEndpoints;
 
-    const success = this.hexapod.updateBodyIK(
+    let success = this.hexapod.updateBodyIK(
       newPose,
       newEndpoints,
     );
@@ -604,10 +620,14 @@ export class Animator {
 
     this.t = this.timer.getElapsed() / anim.getDuration();
 
-    if (!success) {
-      this.currentAnimation._promise.reject()
-      this.currentAnimation = null;
-    }
+    // if (!success) {
+    // this.currentAnimation._promise.reject()
+    // this.currentAnimation = null;
+    // }
   }
 }
 
+const almostEqual = (a, b) => {
+  if (a === null) return true;
+  return a.toFixed(4) === b.toFixed(4)
+}

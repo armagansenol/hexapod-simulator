@@ -112,7 +112,7 @@ export const config: Configuration = {
     }
   },
   orbitControls: {
-    // autoRotate: true,
+    autoRotate: false,
     enableDamping: true,
     dampingFactor: 0.1
   },

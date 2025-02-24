@@ -209,6 +209,14 @@ export class View extends EventTarget {
         new CustomEvent(Events.ResetHexapod)
       )
     })
+
+    resetButton.addEventListener("touchstart", function () {
+      resetButton.setAttribute("active", "active");
+    });
+
+    resetButton.addEventListener("touchend", function () {
+      resetButton.removeAttribute("active");
+    });
   }
 
   /**
@@ -227,6 +235,9 @@ export class View extends EventTarget {
       `input[data-category=${category}][data-parameter=${parameter}]`
     ) as HTMLInputElement;
     slider.value = value;
+
+    const key = `${category}_${parameter}`;
+    this.EMA.set(key, value)
   }
 
   /**

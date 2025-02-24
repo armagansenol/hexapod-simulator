@@ -432,7 +432,7 @@ export class Leg extends EventTarget {
     const beta = angles.beta;
     const gamma = angles.gamma;
 
-    console.log(id, "Computing FK for: ", alpha, beta, gamma);
+    // console.log(id, "Computing FK for: ", alpha, beta, gamma);
 
     this.saveLocalFramePose();
 

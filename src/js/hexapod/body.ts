@@ -200,7 +200,7 @@ export class Hexapod extends EventTarget {
     pose: Pose,
     joints: Array<JointAngles>,
   ): boolean | Array<THREE.Vector3> {
-    console.log(joints);
+    // console.log(joints);
 
     const endpoints: Array<THREE.Vector3> = this.legs.map(
       (leg, index) =>
