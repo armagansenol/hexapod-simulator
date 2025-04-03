@@ -1,81 +1,49 @@
-import * as THREE from 'three';
-import { config } from '../configuration';
-import {
-  deg2rad,
-  rad2deg,
-  sampleCircle,
-  sq,
-  sqrt,
-  V3,
-  createCylinderAligned,
-  createLine,
-  assert,
-} from '../utils';
-import { Hexapod } from './body';
-import {
-  EndpointInterpolator,
-  Animator,
-  Bezier,
-  Eazier,
-  Animation,
-} from './animation';
-import {
-  Events,
-  JointAngles,
-  Pose,
-  Source,
-  Category,
-  Parameter,
-} from './common';
-import { View } from './view';
-import { Model } from './model';
+import * as THREE from "three"
+import { deg2rad } from "../utils"
+import { Hexapod } from "./body"
+import { Animator, Eazier, Animation } from "./animation"
+import { Events, Source, Category, Parameter } from "./common"
+import { View } from "./view"
+import { Model } from "./model"
 
 export class HexapodController {
-  public scene: THREE.Scene;
+  public scene: THREE.Scene
 
-  private hexapod: Hexapod;
-  private model: Model;
-  private view: View;
-  private animator: Animator;
+  private hexapod: Hexapod
+  private model: Model
+  private view: View
+  private animator: Animator
 
   constructor(scene: THREE.Scene) {
     // Create instances of the hexapod, model, and view
-    this.hexapod = new Hexapod(scene);
-    this.model = new Model();
+    this.hexapod = new Hexapod(scene)
+    this.model = new Model()
 
-    this.view = new View();
+    this.view = new View()
 
     // Register view event listeners
-    this.addViewEventListeners();
+    this.addViewEventListeners()
 
     // Register hexapod event listeners
-    this.addHexapodEventListeners();
+    this.addHexapodEventListeners()
 
     // Set the initial category of the tabbed view
-    this.view.setTab('body');
+    this.view.setTab("body")
 
-    this.hexapod.updateBodyIK(
-      this.model.pose,
-      this.model.endpoints,
-    );
+    this.hexapod.updateBodyIK(this.model.pose, this.model.endpoints)
 
     // const interpolator = new EndpointInterpolator();
 
-    const animator = new Animator(this.hexapod, this.model);
-    this.animator = animator;
+    const animator = new Animator(this.hexapod, this.model)
+    this.animator = animator
 
     setTimeout(this.queueIntroAnimation.bind(this), 750)
-
   }
 
   queueIntroAnimation() {
     // Disable all sliders, play the intro animation then enable the sliders again.
-    this.disableAllSliders();
-    this.hexapodStand().then(() =>
-      this.hexapodWiggle
-        .bind(this, 10)()
-        .then(this.enableSliders.bind(this, "body")),
-    );
+    this.disableAllSliders()
+    this.hexapodStand().then(() => this.hexapodWiggle.bind(this, 10)().then(this.enableSliders.bind(this, "body")))
   }
 
   hexapodStand() {
@@ -84,13 +52,13 @@ export class HexapodController {
         z: Eazier([0.17, 0.4, 1, 0.3], 8),
       })
         .setDuration(0.8)
-        .setEasing('ease-out'),
-    );
+        .setEasing("ease-out")
+    )
   }
 
   hexapodWiggle(angle = 10) {
-    const tilt = deg2rad(angle);
-    const pose = this.model.pose;
+    const tilt = deg2rad(angle)
+    const pose = this.model.pose
 
     this.animator.queueAnimation(
       new Animation({
@@ -100,8 +68,8 @@ export class HexapodController {
         roll: [pose.roll, 0],
         pitch: [pose.pitch, 0],
         yaw: [pose.yaw, 0],
-      }).setDuration(0.1),
-    );
+      }).setDuration(0.1)
+    )
 
     return this.animator.queueAnimation(
       new Animation({
@@ -136,7 +104,6 @@ export class HexapodController {
           tilt,
           tilt,
 
-
           0,
         ],
         pitch: [
@@ -169,16 +136,14 @@ export class HexapodController {
           -tilt,
           0,
 
-
-
           0,
         ],
         // z: Eazier([0.17, 0.5, 1, 0.5], 8),
       })
-        .setDirection('normal')
+        .setDirection("normal")
         .setDuration(2.5)
-        .setEasing('ease-in-out'),
-    );
+        .setEasing("ease-in-out")
+    )
   }
 
   /**
@@ -186,99 +151,54 @@ export class HexapodController {
    */
   addViewEventListeners() {
     // Handle the switching of tabs
-    this.view.addEventListener(
-      Events.TabSwitched,
-      (event: Event) => {
-        const detail = (<CustomEvent>event).detail;
+    this.view.addEventListener(Events.TabSwitched, (event: Event) => {
+      const detail = (<CustomEvent>event).detail
 
-        let category = this.model.getCategory();
+      const category = this.model.getCategory()
 
-        // Disable the sliders when leaving joints or
-        // endpoints tabs
-        if (
-          category === 'joints' ||
-          category === 'endpoints'
-        ) {
-          this.view.disableSliders(category);
-        }
+      // Disable the sliders when leaving joints or
+      // endpoints tabs
+      if (category === "joints" || category === "endpoints") {
+        this.view.disableSliders(category)
+      }
 
-        let newCategory = detail.value;
+      const newCategory = detail.value
 
-        this.model.setCategory(newCategory);
+      this.model.setCategory(newCategory)
 
-        // Disable the sliders if moving to the joints or endpoints tab
-        if (
-          newCategory === 'joints' ||
-          newCategory === 'endpoints'
-        ) {
-          this.view.disableSliders(newCategory);
-        }
-      },
-    );
+      // Disable the sliders if moving to the joints or endpoints tab
+      if (newCategory === "joints" || newCategory === "endpoints") {
+        this.view.disableSliders(newCategory)
+      }
+    })
 
     // Update the model when the leg selection changes,
     // and update the sliders accordingly
-    this.view.addEventListener(
-      Events.LegSelectionChanged,
-      (event: Event) => {
-        const detail = (<CustomEvent>event).detail;
+    this.view.addEventListener(Events.LegSelectionChanged, (event: Event) => {
+      const detail = (<CustomEvent>event).detail
 
-        this.model.setSelectedLegIndexes(detail.value);
+      this.model.setSelectedLegIndexes(detail.value)
 
-        let category = this.model.getCategory();
+      const category = this.model.getCategory()
 
-        if (category === 'joints') {
-          const { gamma, beta, alpha } =
-            this.model.joints[
-            this.model.getSelectedLegIndexes()[0]
-            ];
-          console.log(gamma, beta, alpha);
-          this.view.setSliderValue(
-            category,
-            'gamma',
-            String(gamma),
-          );
-          this.view.setSliderValue(
-            category,
-            'beta',
-            String(beta),
-          );
-          this.view.setSliderValue(
-            category,
-            'alpha',
-            String(alpha),
-          );
-        } else if (category === 'endpoints') {
-          const { x, y, z } =
-            this.model.endpoints[
-            this.model.getSelectedLegIndexes()[0]
-            ];
-          console.log(x, y, z);
-          this.view.setSliderValue(
-            category,
-            'x',
-            String(x),
-          );
-          this.view.setSliderValue(
-            category,
-            'y',
-            String(y),
-          );
-          this.view.setSliderValue(
-            category,
-            'z',
-            String(z),
-          );
-        }
-        this.view.enableSliders(this.model.getCategory());
-      },
-    );
+      if (category === "joints") {
+        const { gamma, beta, alpha } = this.model.joints[this.model.getSelectedLegIndexes()[0]]
+        console.log(gamma, beta, alpha)
+        this.view.setSliderValue(category, "gamma", String(gamma))
+        this.view.setSliderValue(category, "beta", String(beta))
+        this.view.setSliderValue(category, "alpha", String(alpha))
+      } else if (category === "endpoints") {
+        const { x, y, z } = this.model.endpoints[this.model.getSelectedLegIndexes()[0]]
+        console.log(x, y, z)
+        this.view.setSliderValue(category, "x", String(x))
+        this.view.setSliderValue(category, "y", String(y))
+        this.view.setSliderValue(category, "z", String(z))
+      }
+      this.view.enableSliders(this.model.getCategory())
+    })
 
     // Handle the slider input
-    this.view.addEventListener(
-      Events.SliderInput,
-      this.handleSliderInput.bind(this),
-    );
+    this.view.addEventListener(Events.SliderInput, this.handleSliderInput.bind(this))
 
     // Handle reset button input
 
@@ -291,140 +211,94 @@ export class HexapodController {
   addHexapodEventListeners() {
     // Update the model and input sliders when the body's
     // pose changes
-    this.hexapod.addEventListener(
-      Events.HexapodPoseUpdate,
-      (event: Event) => {
-        const detail = (<CustomEvent>event).detail;
-        const pose = detail.pose;
+    this.hexapod.addEventListener(Events.HexapodPoseUpdate, (event: Event) => {
+      const detail = (<CustomEvent>event).detail
+      const pose = detail.pose
 
-        this.model.pose.x = pose.x;
-        this.model.pose.y = pose.y;
-        this.model.pose.z = pose.z;
-        this.model.pose.roll = pose.roll;
-        this.model.pose.pitch = pose.pitch;
-        this.model.pose.yaw = pose.yaw;
+      this.model.pose.x = pose.x
+      this.model.pose.y = pose.y
+      this.model.pose.z = pose.z
+      this.model.pose.roll = pose.roll
+      this.model.pose.pitch = pose.pitch
+      this.model.pose.yaw = pose.yaw
 
-        this.view.setSliderValue('body', 'x', pose.x);
-        this.view.setSliderValue('body', 'y', pose.y);
-        this.view.setSliderValue('body', 'z', pose.z);
-        this.view.setSliderValue('body', 'roll', pose.roll);
-        this.view.setSliderValue(
-          'body',
-          'pitch',
-          pose.pitch,
-        );
-        this.view.setSliderValue('body', 'yaw', pose.yaw);
-      },
-    );
+      this.view.setSliderValue("body", "x", pose.x)
+      this.view.setSliderValue("body", "y", pose.y)
+      this.view.setSliderValue("body", "z", pose.z)
+      this.view.setSliderValue("body", "roll", pose.roll)
+      this.view.setSliderValue("body", "pitch", pose.pitch)
+      this.view.setSliderValue("body", "yaw", pose.yaw)
+    })
 
     // Update the model and the view when the leg angles
     // change
-    this.hexapod.addEventListener(
-      Events.HexapodJointAnglesUpdate,
-      (event: Event) => {
-        const detail = (<CustomEvent>event).detail;
-        const jointAngles = detail.jointAngles;
+    this.hexapod.addEventListener(Events.HexapodJointAnglesUpdate, (event: Event) => {
+      const detail = (<CustomEvent>event).detail
+      const jointAngles = detail.jointAngles
 
-        // Update the model
-        this.model.setJoints(jointAngles);
+      // Update the model
+      this.model.setJoints(jointAngles)
 
-        let indexes = this.model.getSelectedLegIndexes();
+      const indexes = this.model.getSelectedLegIndexes()
 
-        let index = 0;
+      let index = 0
 
-        // Update the view
-        if (indexes.length > 0) {
-          index = indexes[0];
+      // Update the view
+      if (indexes.length > 0) {
+        index = indexes[0]
 
-          const legJointAngles = this.model.joints[index];
+        const legJointAngles = this.model.joints[index]
 
-          this.view.setSliderValue(
-            'joints',
-            'gamma',
-            String(legJointAngles.gamma),
-          );
-          this.view.setSliderValue(
-            'joints',
-            'beta',
-            String(legJointAngles.beta),
-          );
-          this.view.setSliderValue(
-            'joints',
-            'alpha',
-            String(legJointAngles.alpha),
-          );
-        }
-      },
-    );
+        this.view.setSliderValue("joints", "gamma", String(legJointAngles.gamma))
+        this.view.setSliderValue("joints", "beta", String(legJointAngles.beta))
+        this.view.setSliderValue("joints", "alpha", String(legJointAngles.alpha))
+      }
+    })
 
     // Update the model and the view when the leg endpoint
     // positions change
-    this.hexapod.addEventListener(
-      Events.HexapodEndpointPositionsUpdate,
-      (event: Event) => {
-        const detail = (<CustomEvent>event).detail;
-        const endpoints = detail.endpoints;
-        // console.log("endpoints[1] = ", endpoints[1]);
-        // Update the model
-        this.model.setEndpoints(endpoints);
+    this.hexapod.addEventListener(Events.HexapodEndpointPositionsUpdate, (event: Event) => {
+      const detail = (<CustomEvent>event).detail
+      const endpoints = detail.endpoints
+      // console.log("endpoints[1] = ", endpoints[1]);
+      // Update the model
+      this.model.setEndpoints(endpoints)
 
-        let indexes = this.model.getSelectedLegIndexes();
+      const indexes = this.model.getSelectedLegIndexes()
 
-        let index = 0;
+      let index = 0
 
-        // Update the view
-        if (indexes.length > 0) {
-          index = indexes[0];
+      // Update the view
+      if (indexes.length > 0) {
+        index = indexes[0]
 
-          const endpoint = this.model.endpoints[index];
+        const endpoint = this.model.endpoints[index]
 
-          this.view.setSliderValue(
-            'endpoints',
-            'x',
-            String(endpoint.x),
-          );
-          this.view.setSliderValue(
-            'endpoints',
-            'y',
-            String(endpoint.y),
-          );
-          this.view.setSliderValue(
-            'endpoints',
-            'z',
-            String(endpoint.z),
-          );
-        }
-      },
-    );
+        this.view.setSliderValue("endpoints", "x", String(endpoint.x))
+        this.view.setSliderValue("endpoints", "y", String(endpoint.y))
+        this.view.setSliderValue("endpoints", "z", String(endpoint.z))
+      }
+    })
 
     // Disable input sliders when an animation is running
-    this.hexapod.addEventListener(
-      Events.HexapodAnimationStarted,
-      this.disableAllSliders.bind(this),
-    );
+    this.hexapod.addEventListener(Events.HexapodAnimationStarted, this.disableAllSliders.bind(this))
 
     // Enable input sliders when an animation completes
-    this.hexapod.addEventListener(
-      Events.HexapodAnimationFinished,
-      this.enableAllSliders.bind(this),
-    );
+    this.hexapod.addEventListener(Events.HexapodAnimationFinished, this.enableAllSliders.bind(this))
 
     // Enable input sliders when an animation is terminated
-    this.hexapod.addEventListener(
-      Events.HexapodAnimationStopped,
-      this.enableAllSliders.bind(this),
-    );
+    this.hexapod.addEventListener(Events.HexapodAnimationStopped, this.enableAllSliders.bind(this))
   }
 
   disableAllSliders() {
-    this.view.disableSliders('body');
-    this.view.disableSliders('joints');
-    this.view.disableSliders('endpoints');
+    this.view.disableSliders("body")
+    this.view.disableSliders("joints")
+    this.view.disableSliders("endpoints")
   }
 
   disableSliders(...sliders) {
-    const target = sliders;
-    const categories = ['body', 'joints', 'endpoints']
+    const target = sliders
+    const categories = ["body", "joints", "endpoints"]
 
     target.forEach((category) => {
       if (categories.includes(category)) {
@@ -434,14 +308,14 @@ export class HexapodController {
   }
 
   enableAllSliders() {
-    this.view.enableSliders('body');
-    this.view.enableSliders('joints');
-    this.view.enableSliders('endpoints');
+    this.view.enableSliders("body")
+    this.view.enableSliders("joints")
+    this.view.enableSliders("endpoints")
   }
 
   enableSliders(...sliders) {
-    const target = sliders;
-    const categories = ['body', 'joints', 'endpoints']
+    const target = sliders
+    const categories = ["body", "joints", "endpoints"]
 
     target.forEach((category) => {
       if (categories.includes(category)) {
@@ -451,49 +325,39 @@ export class HexapodController {
   }
 
   animate() {
-    this.animator.step();
+    this.animator.step()
   }
 
   handleSliderInput(event: Event) {
-    const detail = (<CustomEvent>event).detail;
+    const detail = (<CustomEvent>event).detail
 
     // Disable the event listener on sliders while we update the hexapod.
-    this.view.disableSliderInputHandler();
+    this.view.disableSliderInputHandler()
     /*
     type Source = "user" | "hexapod";
     type Category = "body" | "joints" | "endpoints";
     type Parameter = "x" | "y" | "z" | "roll" | "pitch" | "yaw" | "alpha" | "beta" | "gamma";
     */
-    const source = detail.source as Source;
-    const category = detail.category as Category;
-    const parameter = detail.parameter as Parameter;
-    const value = detail.value as number;
+    const source = detail.source as Source
+    const category = detail.category as Category
+    const parameter = detail.parameter as Parameter
+    const value = detail.value as number
 
-    if (category === 'body') {
-      this.updateBody(source, category, parameter, value);
-    } else if (category === 'joints') {
-      this.updateJoint(source, category, parameter, value);
-    } else if (category === 'endpoints') {
-      this.updateEndpoint(
-        source,
-        category,
-        parameter,
-        value,
-      );
+    if (category === "body") {
+      this.updateBody(source, category, parameter, value)
+    } else if (category === "joints") {
+      this.updateJoint(source, category, parameter, value)
+    } else if (category === "endpoints") {
+      this.updateEndpoint(source, category, parameter, value)
     }
 
     // Resume event listening on the sliders.
-    this.view.enableSliderInputHandler();
+    this.view.enableSliderInputHandler()
   }
 
-  updateBody(
-    source: Source,
-    category: Category,
-    parameter: Parameter,
-    value: number,
-  ) {
-    const oldPose = this.model.pose;
-    const endpoints = this.model.endpoints;
+  updateBody(source: Source, category: Category, parameter: Parameter, value: number) {
+    const oldPose = this.model.pose
+    const endpoints = this.model.endpoints
 
     const newPose = {
       x: oldPose.x,
@@ -502,55 +366,40 @@ export class HexapodController {
       roll: oldPose.roll,
       pitch: oldPose.pitch,
       yaw: oldPose.yaw,
-    };
+    }
 
-    newPose[parameter] = value;
+    newPose[parameter] = value
 
-    const success = this.hexapod.updateBodyIK(
-      newPose,
-      endpoints,
-    );
+    const success = this.hexapod.updateBodyIK(newPose, endpoints)
 
     // If the update was a success update the model,
     // otherwise discard the new pose and revert the slider.
     if (success) {
-      this.model.pose = newPose;
+      this.model.pose = newPose
     } else {
-      console.log('Body IK failure!');
-      this.view.setSliderValue(
-        category,
-        parameter,
-        oldPose[parameter],
-      );
+      console.log("Body IK failure!")
+      this.view.setSliderValue(category, parameter, oldPose[parameter])
     }
   }
 
-  updateJoint(
-    source: Source,
-    category: Category,
-    parameter: Parameter,
-    value: number,
-  ) {
-    const pose = this.model.pose;
+  updateJoint(source: Source, category: Category, parameter: Parameter, value: number) {
+    const pose = this.model.pose
 
-    const oldJointAngles = this.model.joints;
+    const oldJointAngles = this.model.joints
 
     const newJointAngles = oldJointAngles.map((obj) => ({
       ...obj,
-    }));
+    }))
 
-    const indexes = this.model.getSelectedLegIndexes();
+    const indexes = this.model.getSelectedLegIndexes()
 
     for (let i = 0; i < 6; i++) {
       if (indexes.includes(i)) {
-        newJointAngles[i][parameter] = value;
+        newJointAngles[i][parameter] = value
       }
     }
 
-    const result = this.hexapod.updateBodyFK(
-      pose,
-      newJointAngles,
-    );
+    const result = this.hexapod.updateBodyFK(pose, newJointAngles)
 
     if (result) {
       // this.model.jointAngles = newJointAngles;
@@ -559,40 +408,26 @@ export class HexapodController {
       // });
     } else {
       // this.view.blurSliders("joints")
-      this.view.setSliderValue(
-        category,
-        parameter,
-        oldJointAngles[indexes[0]][parameter],
-      );
+      this.view.setSliderValue(category, parameter, oldJointAngles[indexes[0]][parameter])
     }
   }
 
-  updateEndpoint(
-    source: Source,
-    category: Category,
-    parameter: Parameter,
-    value: number,
-  ) {
-    const pose = this.model.pose;
+  updateEndpoint(source: Source, category: Category, parameter: Parameter, value: number) {
+    const pose = this.model.pose
 
-    const oldEndpoints = this.model.endpoints;
+    const oldEndpoints = this.model.endpoints
 
-    const newEndpoints = this.model.endpoints.map(
-      (endPoint) => endPoint.clone(),
-    );
+    const newEndpoints = this.model.endpoints.map((endPoint) => endPoint.clone())
 
-    const indexes = this.model.getSelectedLegIndexes();
+    const indexes = this.model.getSelectedLegIndexes()
 
     for (let i = 0; i < 6; i++) {
       if (indexes.includes(i)) {
-        newEndpoints[i][parameter] = value;
+        newEndpoints[i][parameter] = value
       }
     }
 
-    const result = this.hexapod.updateBodyIK(
-      pose,
-      newEndpoints,
-    );
+    const result = this.hexapod.updateBodyIK(pose, newEndpoints)
 
     if (result) {
       // this.model.jointAngles = newJointAngles;
@@ -601,19 +436,15 @@ export class HexapodController {
       // });
     } else {
       // this.view.blurSliders("joints")
-      this.view.setSliderValue(
-        category,
-        parameter,
-        oldEndpoints[indexes[0]][parameter],
-      );
+      this.view.setSliderValue(category, parameter, oldEndpoints[indexes[0]][parameter])
     }
   }
   resetHexapod() {
     const pose = this.model.pose
-    const endpointsFrom = this.model.endpoints;
+    const endpointsFrom = this.model.endpoints
     const endpointsTo: Array<THREE.Vector3> = []
     for (let i = 0; i < 6; i++) {
-      endpointsTo.push(new THREE.Vector3(1, 0, 0));
+      endpointsTo.push(new THREE.Vector3(1, 0, 0))
     }
     this.animator.queueAnimation(
       new Animation({
@@ -623,8 +454,10 @@ export class HexapodController {
         roll: [this.model.pose.roll, 0],
         pitch: [pose.pitch, 0],
         yaw: [pose.yaw, 0],
-        endpoints: [endpointsFrom, endpointsTo]
-      }).setEasing("ease-out").setDuration(0.5),
+        endpoints: [endpointsFrom, endpointsTo],
+      })
+        .setEasing("ease-out")
+        .setDuration(0.5)
     )
 
     // .then(() => {
@@ -689,7 +522,6 @@ export class HexapodController {
     //   }).setEasing("ease-out").setDuration(0.5),
     // );
 
-
     // this.animator.queueAnimation(
     //   new Animation({
     //     x: [pose.x, 0],
@@ -701,6 +533,5 @@ export class HexapodController {
     //     endpoints: [endpointsFrom, endpointsTo]
     //   }).setEasing("ease-out").setDuration(0.5),
     // );
-
   }
 }

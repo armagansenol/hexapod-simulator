@@ -1,83 +1,82 @@
-let lightMode = false;
+const lightMode = false
 
 interface Camera {
-  fov: number;
-  position: [number, number, number];
-  near: number;
-  far: 1000;
-  aspect: number,
+  fov: number
+  position: [number, number, number]
+  near: number
+  far: 1000
+  aspect: number
 }
 
 interface AmbientLight {
-  color: number;
-  intensity: number;
+  color: number
+  intensity: number
   shadow: {
     cast: boolean
   }
 }
 
 interface DirectionalLight {
-  color: number;
-  intensity: number;
-  position: [number, number, number];
+  color: number
+  intensity: number
+  position: [number, number, number]
   shadow: {
-    cast: boolean,
-    mapSizeWidth: number,
-    mapSizeHeight: number,
-    cameraNear: number,
+    cast: boolean
+    mapSizeWidth: number
+    mapSizeHeight: number
+    cameraNear: number
     cameraFar: number
   }
 }
 
 interface OrbitControls {
-  autoRotate: boolean;
-  enableDamping: boolean;
-  dampingFactor: number;
+  autoRotate: boolean
+  enableDamping: boolean
+  dampingFactor: number
 }
 
 interface Hexapod {
   body: {
-    color: number,
-    height: number,
-    radius: number,
+    color: number
+    height: number
+    radius: number
     // thickness: number,
-    scale: { x: number, y: number, z: number },
-  };
+    scale: { x: number; y: number; z: number }
+  }
   coxa: {
-    scale: { x: number, y: number, z: number },
-    length: number,
-    color: string,
-    thickness: number,
-    radius: number,
-  };
+    scale: { x: number; y: number; z: number }
+    length: number
+    color: string
+    thickness: number
+    radius: number
+  }
   femur: {
-    color: string,
-    length: number,
-    radiusBottom: number,
-    radiusTop: number,
-    thickness: number,
-  };
-  colorKnee: string;
+    color: string
+    length: number
+    radiusBottom: number
+    radiusTop: number
+    thickness: number
+  }
+  colorKnee: string
   tibia: {
-    color: string,
-    length: number,
-    radiusBottom: number,
-    radiusTop: number,
-    thickness: number,
-  };
-};
-
-interface Configuration {
-  colorBackground: number;
-  colorFloorPlane: number;
-  sizeFloorPlane: [number, number]
-  camera: Camera;
-  shadows: boolean;
-  lights: { ambient: AmbientLight, directional: DirectionalLight };
-  orbitControls: OrbitControls;
-  hexapod: Hexapod;
+    color: string
+    length: number
+    radiusBottom: number
+    radiusTop: number
+    thickness: number
+  }
 }
 
+interface Configuration {
+  colorBackground: number
+  colorFloorPlane: number
+  sizeFloorPlane: [number, number]
+  camera: Camera
+  shadows: boolean
+  lights: { ambient: AmbientLight; directional: DirectionalLight }
+  orbitControls: OrbitControls
+  hexapod: Hexapod
+}
 
 export const config: Configuration = {
   colorBackground: lightMode ? 0xbde0fe : 0x212529,
@@ -108,13 +107,13 @@ export const config: Configuration = {
         mapSizeHeight: 1024,
         cameraNear: 0.1,
         cameraFar: 1000,
-      }
-    }
+      },
+    },
   },
   orbitControls: {
     autoRotate: false,
     enableDamping: true,
-    dampingFactor: 0.1
+    dampingFactor: 0.1,
   },
   hexapod: {
     body: {
@@ -146,6 +145,5 @@ export const config: Configuration = {
       radiusTop: 0.01,
       thickness: 0.05,
     },
-  }
-};
-
+  },
+}

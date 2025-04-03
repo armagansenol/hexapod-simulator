@@ -1,11 +1,7 @@
-import { config } from "../configuration";
-import { deg2rad } from "../utils";
+import { config } from "../configuration"
+import { deg2rad } from "../utils"
 
-import {
-  Events,
-  Category,
-  Parameter,
-} from "./common";
+import { Events, Category, Parameter } from "./common"
 
 const sliderConfiguration = [
   {
@@ -92,13 +88,13 @@ const sliderConfiguration = [
     max: 1.3,
     value: 0,
   },
-];
+]
 
 export class View extends EventTarget {
-  public tabbedView: TabbedView;
-  private sliderInputHandler: (event: Event) => void;
-  private lastSlider: null | HTMLInputElement;
-  private EMA: Map<string, number>;
+  public tabbedView: TabbedView
+  private sliderInputHandler: (event: Event) => void
+  private lastSlider: null | HTMLInputElement
+  private EMA: Map<string, number>
 
   /**
    * Initializes the View class, setting up UI components
@@ -108,13 +104,13 @@ export class View extends EventTarget {
    * map.
    */
   constructor() {
-    super();
-    this.setupTabbedView();
-    this.sliderInputHandler = this.handleSliderInput.bind(this);
-    this.setupSliders();
-    this.setupButtons();
-    this.lastSlider = null;
-    this.EMA = new Map();
+    super()
+    this.setupTabbedView()
+    this.sliderInputHandler = this.handleSliderInput.bind(this)
+    this.setupSliders()
+    this.setupButtons()
+    this.lastSlider = null
+    this.EMA = new Map()
   }
 
   /**
@@ -122,8 +118,8 @@ export class View extends EventTarget {
    * the event listener from the "tab-group".
    */
   disableSliderInputHandler() {
-    const target = document.getElementById("tab-group") as HTMLDivElement;
-    target.removeEventListener("input", this.sliderInputHandler);
+    const target = document.getElementById("tab-group") as HTMLDivElement
+    target.removeEventListener("input", this.sliderInputHandler)
   }
 
   /**
@@ -131,8 +127,8 @@ export class View extends EventTarget {
    * event listener to the "tab-group".
    */
   enableSliderInputHandler() {
-    const target = document.getElementById("tab-group") as HTMLDivElement;
-    target.addEventListener("input", this.sliderInputHandler);
+    const target = document.getElementById("tab-group") as HTMLDivElement
+    target.addEventListener("input", this.sliderInputHandler)
   }
 
   /**
@@ -142,14 +138,11 @@ export class View extends EventTarget {
    * corresponding handler.
    */
   setupTabbedView(): void {
-    const tabbedView = new TabbedView();
+    const tabbedView = new TabbedView()
 
-    tabbedView.addEventListener(
-      Events.TabSwitched,
-      this.handleTabChange.bind(this)
-    );
+    tabbedView.addEventListener(Events.TabSwitched, this.handleTabChange.bind(this))
 
-    this.tabbedView = tabbedView;
+    this.tabbedView = tabbedView
   }
 
   /**
@@ -163,27 +156,24 @@ export class View extends EventTarget {
    * until a selection is made.
    */
   setupSliders(): void {
-    this.enableSliderInputHandler();
+    this.enableSliderInputHandler()
 
     // Configure the sliders
     sliderConfiguration.forEach((item) => {
       const slider = document.querySelector(
         `input[data-category=${item.category}][data-parameter=${item.parameter}]`
-      ) as HTMLInputElement;
+      ) as HTMLInputElement
 
-      slider.min = String(item.min);
-      slider.max = String(item.max);
+      slider.min = String(item.min)
+      slider.max = String(item.max)
 
       // slider.value = String(item.value);
-      slider.value = String(0);
+      slider.value = String(0)
       //   slider.step = String(0.01);
 
       // Joint angle and endpoint sliders are disabled until a leg/leg group is selected.
-      slider.disabled =
-        item.category === "joints" || item.category === "endpoints"
-          ? true
-          : false;
-    });
+      slider.disabled = item.category === "joints" || item.category === "endpoints" ? true : false
+    })
   }
 
   /**
@@ -194,29 +184,27 @@ export class View extends EventTarget {
    * buttons.
    */
   setupButtons(): void {
-    const buttonsGrid = document.querySelectorAll(".button-grid");
+    const buttonsGrid = document.querySelectorAll(".button-grid")
 
     // Listen for button clicks on the top-level button container for each tab.
     buttonsGrid.forEach((grid) => {
-      grid.addEventListener("click", this.handleButtonClick.bind(this));
-    });
+      grid.addEventListener("click", this.handleButtonClick.bind(this))
+    })
 
     const resetButton = document.getElementById("reset-button") as HTMLDivElement
-    resetButton.style.opacity = '1';
+    resetButton.style.opacity = "1"
 
     resetButton.addEventListener("click", () => {
-      this.dispatchEvent(
-        new CustomEvent(Events.ResetHexapod)
-      )
+      this.dispatchEvent(new CustomEvent(Events.ResetHexapod))
     })
 
     resetButton.addEventListener("touchstart", function () {
-      resetButton.setAttribute("active", "active");
-    });
+      resetButton.setAttribute("active", "active")
+    })
 
     resetButton.addEventListener("touchend", function () {
-      resetButton.removeAttribute("active");
-    });
+      resetButton.removeAttribute("active")
+    })
   }
 
   /**
@@ -233,11 +221,11 @@ export class View extends EventTarget {
   setSliderValue(category: Category, parameter: Parameter, value: string) {
     const slider = document.querySelector(
       `input[data-category=${category}][data-parameter=${parameter}]`
-    ) as HTMLInputElement;
-    slider.value = value;
+    ) as HTMLInputElement
+    slider.value = value
 
-    const key = `${category}_${parameter}`;
-    this.EMA.set(key, value)
+    const key = `${category}_${parameter}`
+    this.EMA.set(key, Number(value))
   }
 
   /**
@@ -248,13 +236,11 @@ export class View extends EventTarget {
    * to enable.
    */
   enableSliders(category: Category) {
-    const sliders = document.querySelectorAll(
-      `input[data-category=${category}]`
-    ) as NodeListOf<HTMLInputElement>;
+    const sliders = document.querySelectorAll(`input[data-category=${category}]`) as NodeListOf<HTMLInputElement>
 
     sliders.forEach((slider: HTMLInputElement) => {
-      slider.disabled = false;
-    });
+      slider.disabled = false
+    })
   }
 
   /**
@@ -265,17 +251,15 @@ export class View extends EventTarget {
    * to disable.
    */
   disableSliders(category: Category) {
-    const currentSelected = document.querySelector(".icon-button[selected]");
-    currentSelected?.removeAttribute("selected");
+    const currentSelected = document.querySelector(".icon-button[selected]")
+    currentSelected?.removeAttribute("selected")
 
-    const sliders = document.querySelectorAll(
-      `input[data-category=${category}]`
-    ) as NodeListOf<HTMLInputElement>;
+    const sliders = document.querySelectorAll(`input[data-category=${category}]`) as NodeListOf<HTMLInputElement>
 
     sliders.forEach((slider: HTMLInputElement) => {
-      slider.blur();
-      slider.disabled = true;
-    });
+      slider.blur()
+      slider.disabled = true
+    })
   }
 
   /**
@@ -286,15 +270,15 @@ export class View extends EventTarget {
    * relevant details.
    */
   handleTabChange(event: Event): void {
-    const detail = (<CustomEvent>event).detail;
+    const detail = (<CustomEvent>event).detail
 
-    event.stopImmediatePropagation();
+    event.stopImmediatePropagation()
 
     this.dispatchEvent(
       new CustomEvent(Events.TabSwitched, {
         detail: detail,
       })
-    );
+    )
   }
 
   /**
@@ -306,26 +290,26 @@ export class View extends EventTarget {
    * value.
    */
   updateSlider() {
-    const target = this.lastSlider as HTMLInputElement;
-    const category = target.dataset.category;
-    const parameter = target.dataset.parameter;
+    const target = this.lastSlider as HTMLInputElement
+    const category = target.dataset.category
+    const parameter = target.dataset.parameter
 
-    let value = Number(target.value);
+    let value = Number(target.value)
 
-    const key = `${category}_${parameter}`;
+    const key = `${category}_${parameter}`
 
     // Calculate the Exponential Moving Average (EMA) to
     // handle sudden big jumps in the input values from
     // the slider being moved too quickly.
     if (this.EMA.has(key)) {
-      let period = 5;
-      let alpha = 2 / (period + 1);
-      let EMA = this.EMA.get(key)!;
-      EMA = alpha * value + (1 - alpha) * EMA;
-      value = EMA;
-      this.EMA.set(key, EMA);
+      const period = 5
+      const alpha = 2 / (period + 1)
+      let EMA = this.EMA.get(key)!
+      EMA = alpha * value + (1 - alpha) * EMA
+      value = EMA
+      this.EMA.set(key, EMA)
     } else {
-      this.EMA.set(key, Number(value));
+      this.EMA.set(key, Number(value))
     }
 
     this.dispatchEvent(
@@ -337,9 +321,9 @@ export class View extends EventTarget {
           value: value,
         },
       })
-    );
+    )
 
-    this.lastSlider = null;
+    this.lastSlider = null
   }
 
   /**
@@ -351,19 +335,19 @@ export class View extends EventTarget {
    * slider interaction.
    */
   handleSliderInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    if (target.type !== "range") return;
+    const target = event.target as HTMLInputElement
+    if (target.type !== "range") return
 
-    event.stopImmediatePropagation();
+    event.stopImmediatePropagation()
 
     // Synchronize slider input event dispatch with the
     // browser repaint.
 
-    if (this.lastSlider) return;
+    if (this.lastSlider) return
 
-    this.lastSlider = target;
+    this.lastSlider = target
 
-    requestAnimationFrame(this.updateSlider.bind(this));
+    requestAnimationFrame(this.updateSlider.bind(this))
   }
 
   /**
@@ -377,18 +361,18 @@ export class View extends EventTarget {
    * button interaction.
    */
   handleButtonClick(event: Event): void {
-    const target = event.target as HTMLImageElement;
+    const target = event.target as HTMLImageElement
 
     // Only handle click events on leg selection buttons
     if (!(target.dataset.category && target.dataset.legs)) {
-      return;
+      return
     }
 
-    event.stopImmediatePropagation();
+    event.stopImmediatePropagation()
 
-    const currentSelected = document.querySelector(".icon-button[selected]");
-    currentSelected?.removeAttribute("selected");
-    target.setAttribute("selected", "selected");
+    const currentSelected = document.querySelector(".icon-button[selected]")
+    currentSelected?.removeAttribute("selected")
+    target.setAttribute("selected", "selected")
 
     this.dispatchEvent(
       new CustomEvent(Events.LegSelectionChanged, {
@@ -397,17 +381,17 @@ export class View extends EventTarget {
           category: target.dataset.category as string,
         },
       })
-    );
+    )
   }
 
   /**
    * Switches the tabbed view to the specified category.
-   * 
-   * @param category - The tabbed view category to switch 
+   *
+   * @param category - The tabbed view category to switch
    * to. Can be: "body", "joints", or "endpoints"
    */
   setTab(category: Category) {
-    this.tabbedView.category = category;
+    this.tabbedView.category = category
   }
 }
 
@@ -415,55 +399,53 @@ class TabbedView extends EventTarget {
   /**
    * The container element holding all tab content.
    */
-  public tabGroup: HTMLElement;
+  public tabGroup: HTMLElement
 
   /**
    * Collection of tab elements.
    */
-  private tabs: HTMLCollectionOf<HTMLElement>;
+  private tabs: HTMLCollectionOf<HTMLElement>
   /**
    * Collection of tab buttons that switch between tabs.
    */
-  private buttons: NodeListOf<HTMLLIElement>;
+  private buttons: NodeListOf<HTMLLIElement>
 
   /**
    * Index of the previously selected tab.
    */
-  public previousTabIndex: number;
+  public previousTabIndex: number
   /**
    * Name of the previously selected tab.
    */
-  public previousTabName: string;
+  public previousTabName: string
   /**
    * Index of the currently selected tab.
    */
-  public currentTabIndex: number;
+  public currentTabIndex: number
   /**
    * Name of the currently selected tab.
    */
-  public currentTabName: string;
+  public currentTabName: string
 
   constructor() {
-    super();
+    super()
     // Get the tab container element
-    this.tabGroup = document.getElementById("tab-group")!;
+    this.tabGroup = document.getElementById("tab-group")!
 
     // Get the child elements (tabs) of the tab container
-    this.tabs = this.tabGroup.children as HTMLCollectionOf<HTMLElement>;
+    this.tabs = this.tabGroup.children as HTMLCollectionOf<HTMLElement>
 
     // Get all tab buttons
-    this.buttons = document
-      .getElementById("tab-buttons")!
-      .querySelectorAll(".tab-button");
+    this.buttons = document.getElementById("tab-buttons")!.querySelectorAll(".tab-button")
 
     // Initialize tab tracking variables
-    this.previousTabIndex = -1;
-    this.previousTabName = "null";
-    this.currentTabIndex = -1;
-    this.currentTabName = "null";
+    this.previousTabIndex = -1
+    this.previousTabName = "null"
+    this.currentTabIndex = -1
+    this.currentTabName = "null"
 
     // Register event listeners for tab switching
-    this.registerEventListeners();
+    this.registerEventListeners()
   }
 
   /**
@@ -472,13 +454,13 @@ class TabbedView extends EventTarget {
    */
   set category(value: Category) {
     if (value === "body") {
-      this.buttons[0].click();
+      this.buttons[0].click()
     } else if (value === "joints") {
-      this.buttons[1].click();
+      this.buttons[1].click()
     } else if (value === "endpoints") {
-      this.buttons[2].click();
+      this.buttons[2].click()
     } else if (value === "about") {
-      this.buttons[3].click();
+      this.buttons[3].click()
     }
   }
 
@@ -486,9 +468,7 @@ class TabbedView extends EventTarget {
    * Registers event listeners for handling tab switching.
    */
   registerEventListeners(): void {
-    document
-      .getElementById("tab-buttons")!
-      .addEventListener("click", this.onClickTabButton.bind(this));
+    document.getElementById("tab-buttons")!.addEventListener("click", this.onClickTabButton.bind(this))
   }
 
   /**
@@ -499,47 +479,47 @@ class TabbedView extends EventTarget {
    * tab button.
    */
   onClickTabButton(event: Event): void {
-    const target = event.target as HTMLElement;
+    const target = event.target as HTMLElement
 
     // Get the index of the newly selected tab
-    const newIndex = Number(target.dataset.index);
+    const newIndex = Number(target.dataset.index)
 
     // Prevent unnecessary re-selection of the current tab
-    if (newIndex === this.currentTabIndex) return;
+    if (newIndex === this.currentTabIndex) return
 
     // Get references to old and new tabs and buttons
-    const oldTab = this.tabs[this.currentTabIndex];
-    const newTab = this.tabs[newIndex];
-    const oldButton = this.buttons[this.currentTabIndex];
-    const newButton = this.buttons[newIndex];
+    const oldTab = this.tabs[this.currentTabIndex]
+    const newTab = this.tabs[newIndex]
+    const oldButton = this.buttons[this.currentTabIndex]
+    const newButton = this.buttons[newIndex]
 
     // Ensure the new tab exists before proceeding
-    if (!newTab) return;
+    if (!newTab) return
 
     // Fade out the old tab if it exists
     if (oldTab) {
-      oldTab.style.opacity = "0";
+      oldTab.style.opacity = "0"
     }
 
     // Remove selection indicator from the previous button
     if (oldButton) {
-      oldButton.removeAttribute("selected");
-      this.previousTabName = oldButton.innerText.toLowerCase();
+      oldButton.removeAttribute("selected")
+      this.previousTabName = oldButton.innerText.toLowerCase()
     }
 
     // Mark the new button as selected
     if (newButton) {
-      newButton.setAttribute("selected", "selected");
-      this.currentTabName = newButton.innerText.toLowerCase();
+      newButton.setAttribute("selected", "selected")
+      this.currentTabName = newButton.innerText.toLowerCase()
     }
 
     // Smoothly scroll the new tab into view and make it visible
-    newTab.scrollIntoView({ behavior: "smooth", block: "start" });
-    newTab.style.opacity = "1";
+    newTab.scrollIntoView({ behavior: "smooth", block: "start" })
+    newTab.style.opacity = "1"
 
     // Update tracking indices
-    this.previousTabIndex = this.currentTabIndex;
-    this.currentTabIndex = newIndex;
+    this.previousTabIndex = this.currentTabIndex
+    this.currentTabIndex = newIndex
 
     this.dispatchEvent(
       new CustomEvent(Events.TabSwitched, {
@@ -547,6 +527,6 @@ class TabbedView extends EventTarget {
           value: this.currentTabName,
         },
       })
-    );
+    )
   }
 }
